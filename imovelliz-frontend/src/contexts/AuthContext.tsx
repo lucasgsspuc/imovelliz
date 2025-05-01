@@ -1,5 +1,4 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import axios from 'axios';
 import { AuthService } from '../services/AuthService';
 
 interface User {
@@ -13,7 +12,8 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   checkAuth: () => Promise<void>;
-  logout: () => void;
+  login: (username: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -33,10 +33,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const logout = () => {
-    axios.post('/auth/logout', {}, { withCredentials: true }).finally(() => {
-      setUser(null);
-    });
+  const logout = async () => {
+    await AuthService.logout();
+    setUser(null);
+  };
+
+  const login = async (username: string, password: string) => {
+    await AuthService.login({ username, password });
+    await checkAuth();
   };
 
   useEffect(() => {
@@ -44,7 +48,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, checkAuth, logout }}>
+    <AuthContext.Provider value={{ user, loading, checkAuth, logout, login }}>
       {children}
     </AuthContext.Provider>
   );

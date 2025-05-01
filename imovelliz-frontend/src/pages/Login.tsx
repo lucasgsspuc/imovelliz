@@ -11,12 +11,11 @@ import {
 } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { AuthService } from '../services/AuthService';
 import { useToast } from '../contexts/ToastContext';
 import { useAuth } from '../contexts/AuthContext';
 
 const Login = () => {
-  const { user } = useAuth();
+  const { user, login } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const { showToast } = useToast();
@@ -24,13 +23,14 @@ const Login = () => {
 
   useEffect(() => {
     if (user) {
-      navigate('/home');
+      navigate('/');
     }
   }, [user, navigate]);
 
   const handleLogin = async () => {
     try {
-      await AuthService.login({ username, password });
+      await login(username, password);
+      navigate('/');
     } catch (error) {
       showToast('Não foi possível fazer o login. Por favor, tente novamente!', {
         severity: 'error',
