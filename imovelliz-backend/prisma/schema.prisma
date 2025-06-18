@@ -11,9 +11,86 @@ datasource db {
 }
 
 model User {
-  id    String     @default(uuid()) @id
-  email String  @unique
-  name  String?
-  username String @unique
-  password String?
+  id         String     @default(uuid()) @id
+  email      String     @unique
+  name       String
+  username   String     @unique
+  password   String
+  role       Role       @default(BUYER)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  properties Property[]  // Imóveis que o usuário possui (como vendedor)
+  favorites  Favorite[]  // Imóveis favoritados pelo usuário
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+enum Role {
+  BUYER
+  SELLER
+}
+
+model Property {
+  id             String    @id @default(uuid())
+  ownerId        String
+  owner          User      @relation(fields: [ownerId], references: [id])
+  title          String
+  description    String?
+  address        String
+  city           String
+  state          String
+  zipCode        String?
+  latitude       Float
+  longitude      Float
+  type           PropertyType
+  status         PropertyStatus @default(AVAILABLE)
+  price          Float
+  area           Float?
+  bedrooms       Int?
+  bathrooms      Int?
+  parkingSpaces  Int?
+  furnished      Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  photos         PropertyPhoto[]
+  favorites      Favorite[] // Imóveis favoritados por usuários
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+enum PropertyType {
+  APARTMENT
+  HOUSE
+  COMMERCIAL
+}
+
+enum PropertyStatus {
+  AVAILABLE
+  SOLD
+  RENTED
+}
+
+model PropertyPhoto {
+  id         String    @id @default(uuid())
+  propertyId String
+  property   Property  @relation(fields: [propertyId], references: [id])
+  url        String
+  isMain     Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model Favorite {
+  id         String    @id @default(uuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id])
+  propertyId String
+  property   Property  @relation(fields: [propertyId], references: [id])
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  @@unique([userId, propertyId]) // Garante que um usuário não favorite o mesmo imóvel mais de uma vez
+  @@index([createdAt])
+  @@index([updatedAt])
 }

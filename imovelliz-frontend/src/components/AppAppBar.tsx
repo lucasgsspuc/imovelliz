@@ -68,9 +68,18 @@ export default function AppAppBar() {
       }}
     >
       <Container maxWidth="lg">
-        <StyledToolbar variant="dense" disableGutters>
+        <StyledToolbar
+          variant="dense"
+          disableGutters
+          style={{ maxHeight: '60px' }}
+        >
           <Box
-            sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', px: 0 }}
+            sx={{
+              flexGrow: 1,
+              display: 'flex',
+              alignItems: 'center',
+              px: 0,
+            }}
           >
             <Sitemark />
             <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
@@ -116,14 +125,26 @@ export default function AppAppBar() {
                 </Link>
               </>
             ) : (
-              <Button
-                color="primary"
-                variant="text"
-                size="small"
-                onClick={handleLogout}
-              >
-                Sair
-              </Button>
+              <>
+                <Link to="/favorites">
+                  <Button color="primary" variant="text" size="small">
+                    Meus Favoritos
+                  </Button>
+                </Link>
+                <Link to="/property">
+                  <Button color="primary" variant="text" size="small">
+                    Meus Imóveis
+                  </Button>
+                </Link>
+                <Button
+                  color="primary"
+                  variant="text"
+                  size="small"
+                  onClick={handleLogout}
+                >
+                  Sair
+                </Button>
+              </>
             )}
           </Box>
           <Box sx={{ display: { xs: 'flex', md: 'none' }, gap: 1 }}>
