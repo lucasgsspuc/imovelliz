@@ -33,12 +33,12 @@ export class PropertyController {
     @Request() req: RequestWithUser,
     @Body() body: { propertyId: string },
   ): Promise<Favorite> {
-    return this.favoritesService.createFavorite(req.user.id, body.propertyId);
+    return this.favoritesService.createFavorite(req.user, body.propertyId);
   }
 
   @Get('favorites')
   async getUserFavorites(@Request() req: RequestWithUser): Promise<Favorite[]> {
-    return this.favoritesService.getUserFavorites(req.user.id);
+    return this.favoritesService.getUserFavorites(req.user.username);
   }
 
   @Delete('favorites/:propertyId')
@@ -47,7 +47,7 @@ export class PropertyController {
     @Request() req: RequestWithUser,
     @Param('propertyId') propertyId: string,
   ): Promise<void> {
-    return this.favoritesService.removeFavorite(req.user.id, propertyId);
+    return this.favoritesService.removeFavorite(req.user.username, propertyId);
   }
 
   @Post()

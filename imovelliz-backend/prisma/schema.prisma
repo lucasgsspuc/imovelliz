@@ -44,7 +44,8 @@ model Property {
   longitude      Float
   type           PropertyType
   status         PropertyStatus @default(AVAILABLE)
-  price          Float
+  price          Float?
+  salePrice      Float?
   area           Float?
   bedrooms       Int?
   bathrooms      Int?
@@ -73,7 +74,7 @@ enum PropertyStatus {
 model PropertyPhoto {
   id         String    @id @default(uuid())
   propertyId String
-  property   Property  @relation(fields: [propertyId], references: [id])
+  property   Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   url        String
   isMain     Boolean   @default(false)
   createdAt  DateTime  @default(now())
@@ -87,7 +88,7 @@ model Favorite {
   userId     String
   user       User      @relation(fields: [userId], references: [id])
   propertyId String
-  property   Property  @relation(fields: [propertyId], references: [id])
+  property   Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
   @@unique([userId, propertyId]) // Garante que um usuário não favorite o mesmo imóvel mais de uma vez

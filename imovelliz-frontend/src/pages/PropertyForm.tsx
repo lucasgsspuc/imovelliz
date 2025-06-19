@@ -31,12 +31,14 @@ import {
 } from '../services/PropertyService';
 
 import Property from '../components/Property';
+import { useToast } from '../contexts/ToastContext';
 
 const PropertyForm = () => {
   const [properties, setProperties] = useState<any[]>([]);
   const [openModal, setOpenModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [photos, setPhotos] = useState<File[]>([]); // Estado separado para fotos
+  const { showToast } = useToast();
 
   const {
     control,
@@ -50,6 +52,7 @@ const PropertyForm = () => {
       title: '',
       description: '',
       price: '',
+      salePrice: '',
       type: '',
       address: '',
       city: '',
@@ -78,10 +81,25 @@ const PropertyForm = () => {
   const onSubmit = async (data: any) => {
     console.log('Dados do formulário:', data); // Log para verificar os dados
 
+    if (photos?.length < 5) {
+      showToast('Adicione pelo menos 5 fotos do imóvel.', {
+        severity: 'error',
+        duration: 3000,
+      });
+      return;
+    }
+
     const formData = new FormData();
     formData.append('title', data.title);
     formData.append('description', data.description);
-    formData.append('price', parseFloat(data.price).toString()); // Converte para número e depois para string
+    formData.append(
+      'price',
+      data.price ? parseFloat(data.price).toString() : ''
+    ); // Converte para número e depois para string
+    formData.append(
+      'salePrice',
+      data.salePrice ? parseFloat(data.salePrice).toString() : ''
+    ); // Converte para número e depois para string
     formData.append('type', data.type);
     formData.append('address', data.address);
     formData.append('city', data.city);
@@ -91,8 +109,8 @@ const PropertyForm = () => {
     formData.append('bathrooms', parseInt(data.bathrooms).toString()); // Converte para número
     formData.append('furnished', data.furnished.toString()); // Já é booleano, converte para string
     formData.append('parkingSpaces', parseInt(data.parkingSpaces).toString()); // Converte para número
-    formData.append('latitude', '80');
-    formData.append('longitude', '40');
+    formData.append('latitude', '-21.7998438');
+    formData.append('longitude', '-46.599383');
 
     photos.forEach((photo) => {
       formData.append('files', photo);
@@ -103,7 +121,8 @@ const PropertyForm = () => {
         const updateData: UpdatePropertyDto = {
           title: data.title,
           description: data.description,
-          price: parseFloat(data.price),
+          price: data.price ? parseFloat(data.price) : undefined,
+          salePrice: data.salePrice ? parseFloat(data.salePrice) : undefined,
           type: data.type,
           address: data.address,
           city: data.city,
@@ -125,6 +144,7 @@ const PropertyForm = () => {
         title: '',
         description: '',
         price: '',
+        salePrice: '',
         type: '',
         address: '',
         city: '',
@@ -165,7 +185,7 @@ const PropertyForm = () => {
 
   const handleDeleteProperty = async (id: any) => {
     try {
-      // await PropertyService.delete(id); // Assumindo que existe um método delete
+      await PropertyService.delete(id); // Assumindo que existe um método delete
       await handleShowProperties();
     } catch (error) {
       console.error('Erro ao deletar imóvel:', error);
@@ -178,7 +198,11 @@ const PropertyForm = () => {
       setValue('id', property.id);
       setValue('title', property.title);
       setValue('description', property.description || '');
-      setValue('price', property.price.toString());
+      setValue('price', property.price ? property.price.toString() : '');
+      setValue(
+        'salePrice',
+        property.salePrice ? property.salePrice.toString() : ''
+      );
       setValue('type', property.type);
       setValue('address', property.address);
       setValue('city', property.city);
@@ -216,13 +240,15 @@ const PropertyForm = () => {
             <Typography variant="h4" component="h1">
               Meus Imóveis
             </Typography>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() => setOpenModal(true)}
-            >
-              Adicionar
-            </Button>
+            {properties?.length <= 5 && (
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => setOpenModal(true)}
+              >
+                Adicionar
+              </Button>
+            )}
           </Box>
 
           <Dialog
@@ -283,23 +309,44 @@ const PropertyForm = () => {
                       )}
                     />
                   </Grid>
-                  <Grid size={6}>
-                    <InputLabel htmlFor="price">Preço (R$)</InputLabel>
+                  <Grid size={3}>
+                    <InputLabel htmlFor="price">Preço Aluguel (R$)</InputLabel>
                     <Controller
                       name="price"
                       control={control}
-                      rules={{ required: true }}
                       render={({ field }) => (
                         <TextField
                           {...field}
                           id="price"
                           fullWidth
-                          required
                           hiddenLabel
                           type="number"
                           variant="outlined"
                           error={!!errors.price}
                           helperText={errors.price ? 'Campo obrigatório' : ''}
+                        />
+                      )}
+                    />
+                  </Grid>
+                  <Grid size={3}>
+                    <InputLabel htmlFor="salePrice">
+                      Preço Venda (R$)
+                    </InputLabel>
+                    <Controller
+                      name="salePrice"
+                      control={control}
+                      render={({ field }) => (
+                        <TextField
+                          {...field}
+                          id="salePrice"
+                          fullWidth
+                          hiddenLabel
+                          type="number"
+                          variant="outlined"
+                          error={!!errors.salePrice}
+                          helperText={
+                            errors.salePrice ? 'Campo obrigatório' : ''
+                          }
                         />
                       )}
                     />
@@ -500,7 +547,7 @@ const PropertyForm = () => {
                       component="label"
                       startIcon={<PhotoCamera />}
                     >
-                      Upload de Fotos
+                      Upload
                       <input
                         type="file"
                         hidden
@@ -530,6 +577,22 @@ const PropertyForm = () => {
                 onClick={() => {
                   setOpenModal(false);
                   setIsEditing(false);
+                  reset({
+                    id: null,
+                    title: '',
+                    description: '',
+                    price: '',
+                    salePrice: '',
+                    type: '',
+                    address: '',
+                    city: '',
+                    state: '',
+                    area: '',
+                    bedrooms: '',
+                    bathrooms: '',
+                    furnished: false,
+                    parkingSpaces: '',
+                  });
                 }}
               >
                 Cancelar

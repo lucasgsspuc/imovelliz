@@ -10,6 +10,7 @@ export interface CreatePropertyDto {
   state: string;
   type: string;
   price: number;
+  salePrice: number;
   area: number;
   bedrooms: number;
   bathrooms: number;
@@ -25,6 +26,7 @@ export interface UpdatePropertyDto {
   type?: string;
   address?: string;
   city?: string;
+  salePrice?: number;
   state?: string;
   area?: number;
   bedrooms?: number;
@@ -71,21 +73,27 @@ export class PropertyService {
       .then((response) => response.data);
   }
 
-  static async saveFavorite(id: string) {
+  static async saveFavorite(propertyId: string) {
     return imovellizApi
-      .get<any>(`${PROPERTY_AUTH}/${id}`)
+      .post<any>(`${PROPERTY_AUTH}/favorites`, { propertyId })
       .then((response) => response.data);
   }
 
-  static async getFavorites(id: string) {
+  static async getFavorites() {
     return imovellizApi
-      .get<any>(`${PROPERTY_AUTH}/${id}`)
+      .get<any>(`${PROPERTY_AUTH}/favorites`)
       .then((response) => response.data);
   }
 
   static async deleteFavorite(id: string) {
     return imovellizApi
-      .get<any>(`${PROPERTY_AUTH}/${id}`)
+      .delete(`${PROPERTY_AUTH}/favorites/${id}`)
+      .then((response) => response.data);
+  }
+
+  static async delete(id: string) {
+    return imovellizApi
+      .delete(`${PROPERTY_AUTH}/${id}`)
       .then((response) => response.data);
   }
 }

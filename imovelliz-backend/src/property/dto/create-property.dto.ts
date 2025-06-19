@@ -21,6 +21,7 @@ export class CreatePropertyDto {
   @IsEnum(PropertyType) type: PropertyType;
   @IsOptional() @IsEnum(PropertyStatus) status?: PropertyStatus;
   @IsOptional() @Type(() => Number) price: number;
+  @IsOptional() @Type(() => Number) salePrice: number;
   @IsOptional() @Type(() => Number) area?: number;
   @IsOptional() @Type(() => Number) bedrooms?: number;
   @IsOptional() @Type(() => Number) bathrooms?: number;

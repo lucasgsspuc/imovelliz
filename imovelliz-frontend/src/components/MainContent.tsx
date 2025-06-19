@@ -15,6 +15,15 @@ import { Button } from '@mui/material';
 import { PropertyService } from '../services/PropertyService';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import {
+  Favorite,
+  FavoriteBorder,
+  FavoriteOutlined,
+} from '@mui/icons-material';
+import BathtubOutlinedIcon from '@mui/icons-material/BathtubOutlined';
+import DirectionsCarFilledOutlinedIcon from '@mui/icons-material/DirectionsCarFilledOutlined';
+import BedOutlinedIcon from '@mui/icons-material/BedOutlined';
+import StraightenIcon from '@mui/icons-material/Straighten';
 
 const SyledCard = styled(Card)(({ theme }) => ({
   display: 'flex',
@@ -87,17 +96,53 @@ export default function MainContent() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [properties, setProperties] = React.useState<any[]>([]);
+  const [favorites, setFavorites] = React.useState<Record<string, boolean>>({});
 
-  const handleShowProperties = async () => {
+  const handleShowFavorites = async () => {
     try {
-      const data = await PropertyService.home();
+      const data = await PropertyService.getFavorites();
+      data.forEach(({ property }: any) => {
+        setFavorites((prev) => ({
+          ...prev,
+          [property.id]: true,
+        }));
+      });
+    } catch (error) {
+      console.error('Erro ao carregar imóveis:', error);
+    }
+  };
+
+  const toggleFavorite = async (id: string) => {
+    try {
+      await PropertyService.saveFavorite(id);
+    } catch (error) {
+      console.log(error);
+    }
+
+    setFavorites((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
+
+  const handleShowProperties = React.useCallback(async () => {
+    try {
+      let data;
+
+      if (user) {
+        await handleShowFavorites();
+        data = await PropertyService.getAll();
+      } else {
+        data = await PropertyService.home();
+      }
+
       setProperties(data);
     } catch (error) {}
-  };
+  }, [user]);
 
   React.useEffect(() => {
     handleShowProperties();
-  }, []);
+  }, [handleShowProperties]);
 
   const handleFocus = (index: number) => {
     setFocusedCardIndex(index);
@@ -206,12 +251,36 @@ export default function MainContent() {
                 }}
               />
               <SyledCardContent>
-                <Typography variant="h6">
-                  {priceFormatter(property.price)}
-                </Typography>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    width: '100%',
+                  }}
+                >
+                  <Typography variant="h6">
+                    {property.salePrice
+                      ? priceFormatter(property.salePrice)
+                      : priceFormatter(property.price)}
+                  </Typography>
+                  <Box
+                    onClick={async (e) => {
+                      e.stopPropagation(); // para não ativar o clique no card
+                      await toggleFavorite(property.id);
+                    }}
+                    sx={{ cursor: 'pointer' }}
+                  >
+                    {favorites[property.id] ? (
+                      <Favorite sx={{ color: 'error.main' }} />
+                    ) : (
+                      <FavoriteBorder />
+                    )}
+                  </Box>
+                </Box>
 
                 <Typography gutterBottom variant="subtitle1" component="div">
-                  {property.address}
+                  {property.city}, {property.state}
                 </Typography>
                 <StyledTypography
                   variant="body2"
@@ -220,24 +289,41 @@ export default function MainContent() {
                 >
                   {property.description}
                 </StyledTypography>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    flexDirection: 'row',
-                    gap: 2,
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    margintop: '10px',
-                    padding: '8px',
-                  }}
-                >
-                  <Typography variant="body2">{property.area} m²</Typography>
-                  <Typography variant="body2">
-                    {property.parkingSpaces} vagas
-                  </Typography>
-                  <Typography variant="body2">
-                    {property.bedrooms} quartos
-                  </Typography>
+                <Box display="flex" gap={3}>
+                  {property.area && (
+                    <Box display="flex" alignItems="center">
+                      <StraightenIcon sx={{ mr: 1, fontSize: 20 }} />
+                      <Typography variant="body2">
+                        {property.area} m²
+                      </Typography>
+                    </Box>
+                  )}
+                  {property.bedrooms && (
+                    <Box display="flex" alignItems="center">
+                      <BedOutlinedIcon sx={{ mr: 1, fontSize: 20 }} />
+                      <Typography variant="body2">
+                        {property.bedrooms}
+                      </Typography>
+                    </Box>
+                  )}
+                  {property.bathrooms && (
+                    <Box display="flex" alignItems="center">
+                      <BathtubOutlinedIcon sx={{ mr: 1, fontSize: 20 }} />
+                      <Typography variant="body2">
+                        {property.bathrooms}
+                      </Typography>
+                    </Box>
+                  )}
+                  {property.parkingSpaces && (
+                    <Box display="flex" alignItems="center">
+                      <DirectionsCarFilledOutlinedIcon
+                        sx={{ mr: 1, fontSize: 20 }}
+                      />
+                      <Typography variant="body2">
+                        {property.parkingSpaces}
+                      </Typography>
+                    </Box>
+                  )}
                 </Box>
               </SyledCardContent>
             </SyledCard>
@@ -245,19 +331,21 @@ export default function MainContent() {
         ))}
       </Grid>
 
-      <Box display="flex" justifyContent="center" alignItems="center">
-        <Button
-          variant="contained"
-          color="primary"
-          size="large"
-          onClick={() => {
-            if (user) console.log('Ver mais');
-            else navigate('/login');
-          }}
-        >
-          Ver mais
-        </Button>
-      </Box>
+      {!user && (
+        <Box display="flex" justifyContent="center" alignItems="center">
+          <Button
+            variant="contained"
+            color="primary"
+            size="large"
+            onClick={() => {
+              if (user) console.log('Ver mais');
+              else navigate('/login');
+            }}
+          >
+            Ver mais
+          </Button>
+        </Box>
+      )}
     </Box>
   );
 }

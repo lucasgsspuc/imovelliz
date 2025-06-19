@@ -15,68 +15,33 @@ import ApartmentOutlinedIcon from '@mui/icons-material/ApartmentOutlined';
 import BedOutlinedIcon from '@mui/icons-material/BedOutlined';
 import StraightenIcon from '@mui/icons-material/Straighten';
 
-const Property = ({ property }: any) => {
-  const itemData = [
-    {
-      img: 'https://images.unsplash.com/photo-1551963831-b3b1ca40c98e',
-      title: 'Breakfast',
-      rows: 2,
-      cols: 2,
-    },
-    {
-      img: 'https://images.unsplash.com/photo-1551782450-a2132b4ba21d',
-      title: 'Burger',
-    },
-    {
-      img: 'https://images.unsplash.com/photo-1522770179533-24471fcdba45',
-      title: 'Camera',
-    },
-    {
-      img: 'https://images.unsplash.com/photo-1444418776041-9c7e33cc5a9c',
-      title: 'Coffee',
-      cols: 2,
-    },
-    {
-      img: 'https://images.unsplash.com/photo-1533827432537-70133748f5c8',
-      title: 'Hats',
-      cols: 2,
-    },
-    {
-      img: 'https://images.unsplash.com/photo-1558642452-9d2a7deb7f62',
-      title: 'Honey',
-      author: '@arwinneil',
-      rows: 2,
-      cols: 2,
-    },
-    {
-      img: 'https://images.unsplash.com/photo-1516802273409-68526ee1bdd6',
-      title: 'Basketball',
-    },
-    {
-      img: 'https://images.unsplash.com/photo-1518756131217-31eb79b20e8f',
-      title: 'Fern',
-    },
-    {
-      img: 'https://images.unsplash.com/photo-1597645587822-e99fa5d45d25',
-      title: 'Mushrooms',
-      rows: 2,
-      cols: 2,
-    },
-    {
-      img: 'https://images.unsplash.com/photo-1567306301408-9b74779a11af',
-      title: 'Tomato basil',
-    },
-    {
-      img: 'https://images.unsplash.com/photo-1471357674240-e1a485acb3e1',
-      title: 'Sea star',
-    },
-    {
-      img: 'https://images.unsplash.com/photo-1589118949245-7d38baf380d6',
-      title: 'Bike',
-      cols: 2,
-    },
-  ];
+// Interface para os dados do imóvel
+interface Property {
+  id: string;
+  title: string;
+  address: string;
+  city: string;
+  state: string;
+  zipCode?: string;
+  latitude?: number;
+  longitude?: number;
+  type: 'APARTMENT' | 'HOUSE' | 'COMMERCIAL';
+  status: 'AVAILABLE' | 'SOLD' | 'RENTED' | 'UNDER_REVIEW';
+  price: number; // Preço de aluguel
+  salePrice?: number; // Preço de venda (opcional)
+  area?: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  parkingSpaces?: number;
+  description?: string;
+  photos: { url: string; isMain: boolean }[];
+  createdAt: string;
+  updatedAt: string;
+  furnished: boolean;
+}
 
+const Property: React.FC<{ property: Property }> = ({ property }) => {
+  // Função srcset para otimizar o carregamento das imagens
   function srcset(image: string, size: number, rows = 1, cols = 1) {
     return {
       src: `${image}?w=${size * cols}&h=${size * rows}&fit=crop&auto=format`,
@@ -86,6 +51,21 @@ const Property = ({ property }: any) => {
     };
   }
 
+  // Determina o layout dinâmico com base no número de fotos e posição
+  const getColsAndRows = (index: number, totalPhotos: number) => {
+    if (index === 0) return { cols: 5, rows: 2 };
+    return { cols: 2, rows: 2 };
+  };
+
+  // Função para formatar o preço de forma elegante
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+      minimumFractionDigits: 2,
+    }).format(price);
+  };
+
   return (
     <CardContent>
       {/* Grid para Fotos e Detalhes */}
@@ -93,43 +73,42 @@ const Property = ({ property }: any) => {
         {/* Lista de Fotos à Esquerda */}
         <Grid size={{ xs: 12, md: 6 }}>
           <ImageList
-            sx={{ width: 500, height: 450 }}
+            sx={{
+              width: 500,
+              height: property?.photos?.length > 0 ? 450 : 200,
+            }}
             variant="quilted"
             cols={4}
             rowHeight={121}
           >
-            {itemData.map((item) => (
-              <ImageListItem
-                key={item.img}
-                cols={item.cols || 1}
-                rows={item.rows || 1}
-              >
-                <img
-                  {...srcset(item.img, 121, item.rows, item.cols)}
-                  alt={item.title}
-                  loading="lazy"
-                />
-              </ImageListItem>
-            ))}
+            {property.photos?.map((photo, index) => {
+              const { cols, rows } = getColsAndRows(
+                index,
+                property.photos.length
+              );
+              return (
+                <ImageListItem key={photo.url} cols={cols} rows={rows}>
+                  <img
+                    {...srcset(photo.url, 121, rows, cols)}
+                    alt={`${property.title} - Foto ${index + 1}`}
+                    loading="lazy"
+                  />
+                </ImageListItem>
+              );
+            })}
           </ImageList>
         </Grid>
 
         {/* Detalhes do Imóvel à Direita */}
-
         <Grid
           size={{ xs: 12, md: 6 }}
           sx={{
-            height: '100%', // Ocupa toda a altura do contêiner pai
+            height: '100%',
             display: 'flex',
             flexDirection: 'column',
           }}
         >
-          <Box
-            display="flex"
-            flexDirection="column"
-            flexGrow={1} // Faz o Box interno crescer para ocupar o espaço disponível
-            width="100%"
-          >
+          <Box display="flex" flexDirection="column" flexGrow={1} width="100%">
             {/* Título e Status */}
             <Box
               display="flex"
@@ -148,9 +127,33 @@ const Property = ({ property }: any) => {
               </Box>
             </Box>
 
-            <Typography variant="h6" mb={1}>
-              R$ {property.price.toLocaleString('pt-BR')}
-            </Typography>
+            <Box display="flex" flexDirection="column" width="100%" mb={4}>
+              {property.salePrice && property.price ? (
+                <>
+                  <Typography variant="h6">
+                    Aluguel: {formatPrice(property.price)}
+                  </Typography>
+                  {property.salePrice && (
+                    <Typography variant="h6">
+                      Venda: {formatPrice(property.salePrice)}
+                    </Typography>
+                  )}
+                </>
+              ) : (
+                <>
+                  {property.price && (
+                    <Typography variant="h6">
+                      {formatPrice(property.price)}
+                    </Typography>
+                  )}
+                  {property.salePrice && (
+                    <Typography variant="h6">
+                      {formatPrice(property.salePrice)}
+                    </Typography>
+                  )}
+                </>
+              )}
+            </Box>
 
             <Box
               display="flex"

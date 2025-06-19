@@ -22,7 +22,8 @@ export class PropertyService {
         longitude: data.longitude,
         type: data.type,
         status: data.status,
-        price: data.price,
+        price: data.price || 0,
+        salePrice: data.salePrice || 0,
         area: data.area,
         bedrooms: data.bedrooms,
         bathrooms: data.bathrooms,
@@ -38,6 +39,7 @@ export class PropertyService {
       const photos = data.files.map((file) => ({
         url: `http://localhost:9000/uploads/${file.filename}`, // URL base do servidor
         propertyId: property.id,
+        isMain: true,
       }));
       await this.prisma.propertyPhoto.createMany({
         data: photos,
@@ -116,6 +118,7 @@ export class PropertyService {
         title: updatePropertyDto.title,
         description: updatePropertyDto.description,
         price: updatePropertyDto.price,
+        salePrice: updatePropertyDto.salePrice,
         type: updatePropertyDto.type,
         address: updatePropertyDto.address,
         city: updatePropertyDto.city,
