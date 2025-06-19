@@ -11,6 +11,8 @@ import PropertyForm from './pages/PropertyForm';
 import Favorites from './pages/Favorites';
 import { CssBaseline } from '@mui/material';
 import AppTheme from './theme/AppTheme';
+import FAQ from './pages/Faq';
+import Pricing from './pages/Pricing';
 
 function App() {
   return (
@@ -23,6 +25,8 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/register" element={<Register />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/faq" element={<FAQ />} />
+            <Route path="/pricing" element={<Pricing />} />
             <Route
               path="/property/:id"
               element={
